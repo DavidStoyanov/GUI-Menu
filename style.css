@@ -40,3 +40,24 @@ image {
     cursor: inherit;
     z-index: 100;
 }
+
+.level.selected {
+    fill: rgba(103, 180, 211, 0.5) !important;
+}
+
+.level.active {
+    fill: rgba(103, 180, 211, 0.5);
+}
+
+.border.active {
+    fill: rgba(103, 180, 211, 0.8);
+}
+
+.level.idle {
+    fill: rgba(0, 0, 0, 0.5);
+}
+
+.border.idle {
+    fill: rgba(0, 0, 0, 0.8);
+}
+
