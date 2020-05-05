@@ -14,83 +14,80 @@ window.onload = (event) => {
             id: "refuel",
             level: "01",
             index: "00",
-            svg: "./svg/refuel.png"
+            svg: "./svg/refuel.svg"
         },
         {
             name: "Vehicle",
             id: "vehicle",
             level: "01",
             index: "01",
-            svg: "./svg/vehicle.png"
+            svg: "./svg/vehicle.svg"
         },
         {
             name: "Speedometer",
             id: "speedometer",
             level: "01",
             index: "02",
-            svg: "./svg/speedometer.png"
+            svg: "./svg/speedometer.svg"
         },
         {
-            name: "House",
-            id: "house",
+            name: "Dance",
+            id: "dance",
             level: "01",
             index: "03",
-            svg: "./svg/house.png"
+            svg: "./svg/dance.svg"
         }
     ];
 
-    const pie = d3.pie().value(function(d) { return 1 })(data);
+    // createArc("main", 0, 90, 0.00, "rgba(0, 0, 0, 0.8)", [1]);
+    createArc("level01", 100, 170, 0.05, "rgba(0, 0, 0, 0.5)", data, "arc");
+    // createArc("level01Border", 170, 175, 0.05,  "rgba(0, 0, 0, 0.8)", data, "border");
+    // createArc("side", 175, translateWidth, 0.05,  "rgba(0, 0, 0, 0.0)", data);
 
-    const arc = d3.arc()
-        .innerRadius(100)
-        .outerRadius(170)
-        .padAngle(0.05)
-        .padRadius(75);
+    function createArc(id, innerRadius, outerRadius, padAngle, rgba, data, classes) {
+        const pie = d3.pie().value(function(d) { return 1 })(data);
+        const rotate = -(360 / (data.length * 2));
 
-    const arc2 = d3.arc()
-        .innerRadius(170)
-        .outerRadius(175)
-        .padAngle(0.05)
-        .padRadius(75);
+        const arc = d3.arc()
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius)
+            .padAngle(padAngle)
+            .padRadius(75);
 
-    const arc3 = d3.arc()
-        .innerRadius(175)
-        .outerRadius(translateWidth)
-        .padAngle(0.05)
-        .padRadius(75);
+        const section = svg.append("g")
+            .attr("transform", `translate(${translateWidth},${translateHeight})`)
+            .attr('id', id)
+            .selectAll("path").data(pie);
 
-    const section = svg.append("g")
-        .attr("transform", `translate(${translateWidth},${translateHeight})`)
-        .selectAll("path").data(pie);
+        classes = classes ? (" " + classes) : "";
 
-    const section2 = svg.append("g")
-        .attr("transform", `translate(${translateWidth},${translateHeight})`)
-        .selectAll("path").data(pie);
+        const innerSection = section.enter().append("g");
 
-    const section3 = svg.append("g")
-        .attr("transform", `translate(${translateWidth},${translateHeight})`)
-        .selectAll("path").data(pie);
+        innerSection.append("path")
+            .attr("d", arc)
+            .attr("fill", rgba)
+            .attr("transform", `rotate(${rotate})`)
+            .attr("class", function(d) { return `level-${d.data.level}-index-${d.data.index}${classes}` });
 
-    const rotate = -(360 / (data.length * 2));
+        innerSection.append("g")
+            .attr("transform", function(d) {
+                const centroidXY = arc.centroid(d);
+                const translate = `translate(${centroidXY[0]}, ${centroidXY[1]})`;
+                return `rotate(${rotate}) ` + translate;
+            })
+            .attr("class", "inner-image")
+            .append("svg:image")
+                .attr("xlink:href",function(d) {return d.data.svg;})
+                .attr("width", "32")
+                .attr("height", "32")
+                .attr("transform", function(d) {
+                    const translate = "translate(-10, -20)";
+                    return `rotate(${-rotate}) ` + translate;
+                })
+                .attr("class", function(d) { return `level-${d.data.level}-index-${d.data.index}` });
 
-    section.enter().append("path")
-        .attr("d", arc)
-        .attr("fill", "rgba(0, 0, 0, 0.5)")
-        .attr("transform", `rotate(${rotate})`)
-        .attr("class", function(d) { return `arc level-${d.data.level}-index-${d.data.index}` });
+    }
 
-
-    section2.enter().append("path")
-        .attr("d", arc2)
-        .attr("fill", "rgba(0, 0, 0, 0.8)")
-        .attr("transform", `rotate(${rotate})`)
-        .attr("class", function(d) { return `border level-${d.data.level}-index-${d.data.index}` });
-
-    section3.enter().append("path")
-        .attr("d", arc3)
-        .attr("fill", "rgba(0, 0, 0, 0.50)")
-        .attr("transform", `rotate(${rotate})`)
-        .attr("class", function(d) { return `level-${d.data.level}-index-${d.data.index}` });
 
 
     if (jQuery === undefined) {
@@ -98,8 +95,10 @@ window.onload = (event) => {
         return;
     }
 
+    //$("#side").remove();
+
     const container = $('#container');
-    const path = $('svg path');
+    const path = $('svg g path, svg g image');
     path.on('mouseenter', onMouseEnter);
     path.on('mouseleave', onMouseLeave);
 

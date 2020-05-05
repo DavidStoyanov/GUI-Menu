@@ -29,10 +29,14 @@ svg text {
 }
 
 svg path {
-    /*stroke: #ffffff;*/
     cursor: pointer;
 }
 
-.refuel:hover, .refuel:focus {
-    /*fill: rgba(103, 180, 211, 0.5);*/
+.inner-image {
+    cursor: pointer;
+}
+
+image {
+    cursor: inherit;
+    z-index: 100;
 }
