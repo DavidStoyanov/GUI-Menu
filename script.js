@@ -1,11 +1,12 @@
 window.onload = (event) => {
-    const dimension = window.innerHeight;
-    const translateWidth = Math.ceil(dimension / 2);
-    const translateHeight = Math.ceil((dimension / 2) - 50);
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const translateWidth = Math.ceil(width / 2);
+    const translateHeight = Math.ceil((height / 2) - 50);
 
     const svg = d3.select("#container").append("svg")
-        .attr("width", dimension)
-        .attr("height", dimension);
+        .attr("width", width)
+        .attr("height", height);
 
     const data = [
         {
@@ -52,6 +53,12 @@ window.onload = (event) => {
         .padAngle(0.05)
         .padRadius(75);
 
+    const arc3 = d3.arc()
+        .innerRadius(175)
+        .outerRadius(translateWidth)
+        .padAngle(0.05)
+        .padRadius(75);
+
     const section = svg.append("g")
         .attr("transform", `translate(${translateWidth},${translateHeight})`)
         .selectAll("path").data(pie);
@@ -60,18 +67,30 @@ window.onload = (event) => {
         .attr("transform", `translate(${translateWidth},${translateHeight})`)
         .selectAll("path").data(pie);
 
+    const section3 = svg.append("g")
+        .attr("transform", `translate(${translateWidth},${translateHeight})`)
+        .selectAll("path").data(pie);
+
+    const rotate = -(360 / (data.length * 2));
+
     section.enter().append("path")
         .attr("d", arc)
         .attr("fill", "rgba(0, 0, 0, 0.5)")
-        .attr("transform", "rotate(45)")
+        .attr("transform", `rotate(${rotate})`)
         .attr("class", function(d) { return `arc level-${d.data.level}-index-${d.data.index}` });
 
 
     section2.enter().append("path")
         .attr("d", arc2)
         .attr("fill", "rgba(0, 0, 0, 0.8)")
-        .attr("transform", "rotate(45)")
+        .attr("transform", `rotate(${rotate})`)
         .attr("class", function(d) { return `border level-${d.data.level}-index-${d.data.index}` });
+
+    section3.enter().append("path")
+        .attr("d", arc3)
+        .attr("fill", "rgba(0, 0, 0, 0.50)")
+        .attr("transform", `rotate(${rotate})`)
+        .attr("class", function(d) { return `level-${d.data.level}-index-${d.data.index}` });
 
 
     if (jQuery === undefined) {
