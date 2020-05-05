@@ -1,0 +1,37 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+}
+
+html {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+#container {
+    background: url("./img/background.png") no-repeat center;
+    background-size: cover;
+}
+
+svg {
+    display: block;
+    margin: auto;
+}
+
+svg text {
+    font: 10px Arial, Georgia, sans-serif;
+    text-anchor: middle;
+}
+
+svg path {
+    /*stroke: #ffffff;*/
+    cursor: pointer;
+}
+
+.refuel:hover, .refuel:focus {
+    /*fill: rgba(103, 180, 211, 0.5);*/
+}
