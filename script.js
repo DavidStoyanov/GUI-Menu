@@ -1,11 +1,96 @@
-//https://bl.ocks.org/mbostock/4341417 // Transitions
+//https://bl.ocks.org/mbostock/4341417 // For transitions
 window.onload = (event) => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     const translateWidth = Math.ceil(width / 2);
     const translateHeight = Math.ceil((height / 2) - 50);
 
-    const selectedStack = [];
+    class MenuGUI {
+        constructor() {
+            this.level = 0;
+            this.levelStack = [];
+            this.selectedStack = [];
+
+            this.mainRadius = 90;
+            this.levelPad = 10;
+            this.levelRadius = 70;
+            this.borderRadius = 5;
+
+            this.initMainArc();
+            this.createLevel(data);
+        }
+
+        getLevelRadius(level) {
+            const innerRadiusLevel = this.mainRadius
+                + (this.levelPad * level)
+                + (this.levelRadius * (level - 1))
+                + (this.borderRadius * (level - 1));
+
+            const outerRadiusLevel = innerRadiusLevel + this.levelRadius;
+            const outerRadiusBorder = outerRadiusLevel + this.borderRadius;
+
+            return  {
+                level: {
+                    innerRadius: innerRadiusLevel,
+                    outerRadius: outerRadiusLevel
+                },
+                border: {
+                    innerRadius: outerRadiusLevel,
+                    outerRadius: outerRadiusBorder
+                }
+            }
+        }
+
+        initMainArc() {
+            createMainArc("main", 0, this.mainRadius, "rgba(0, 0, 0, 0.7)", [1]);
+        }
+
+        createLevel(data, element) {
+            while (this.level !== 0 && this.level >= data[0].level) {
+                this.removeLevel();
+            }
+
+            this.level++;
+
+            const levelRadius = this.getLevelRadius(this.level).level;
+            const borderRadius =  this.getLevelRadius(this.level).border;
+
+            const lvlId = "level" + ("0" + this.level).slice(-2);
+            const levelId = createLevelArc(lvlId, levelRadius.innerRadius, levelRadius.outerRadius, 0.05, "rgba(0, 0, 0, 0.5)", data);
+            const borderId = createLevelBorderArc(lvlId + "Border", borderRadius.innerRadius, borderRadius.outerRadius, 0.05,  "rgba(0, 0, 0, 0.8)", data);
+
+            this.levelStack.push([levelId, borderId]);
+
+            if(element) {
+                const selected = element.getElementsByTagName("path")[0];
+                selected.classList.add("selected");
+                this.selectedStack.push(selected);
+            }
+
+            if(this.border) this.removeElementById(this.border);
+            this.createSide(borderRadius.outerRadius, data);
+        }
+
+        createSide(innerRadius, data) {
+            this.border = createSideArc("side", innerRadius, translateWidth, 0.05,  "rgba(0, 0, 0, 0.0)", data);
+        }
+
+        removeElementById(elementId) {
+            const element = document.getElementById(elementId);
+            element.parentNode.removeChild(element);
+        }
+
+        removeLevel() {
+            if (this.level <= 1) return;
+            this.level--;
+
+            this.levelStack.pop().forEach(x => this.removeElementById(x));
+            this.selectedStack.pop().classList.remove("selected");
+
+            if(this.border) this.removeElementById(this.border);
+            this.createSide(this.getLevelRadius(this.level).border.outerRadius, data);
+        }
+    }
 
     const svg = d3.select("#container").append("svg")
         .attr("width", width)
@@ -15,8 +100,7 @@ window.onload = (event) => {
     function createMainArc(id, innerRadius, outerRadius, rgba, data) {
         const padAngle = 0.00;
         const dataObj = createArc(id, innerRadius, outerRadius, padAngle, rgba, data);
-
-        dataObj.innerSection.on('click', closeMenu);
+        dataObj.innerSection.on('click', menuBack);
 
         return dataObj.id;
     }
@@ -98,27 +182,35 @@ window.onload = (event) => {
         return { id, pie, rotate, arc, innerSection };
     }
 
+    // #Helper function
+    // ######################################
+    function getDataByVariable(data) {
+        switch (data) {
+            case "refuel": return refuelData;
+            case "speedometer": return speedometerData;
+            case "dance": return danceData;
+        }
+    }
+
+    function getGroupList(element) {
+        const classes = $(element).find('path').attr('class').split(/\s+/);
+
+        for (const x of classes) {
+            if(x.startsWith('level') && x.includes('index')) {
+                return $('.'.concat(x));
+            }
+        }
+
+        return null;
+    }
+
+    // #Events
+    // ######################################
+
     function addEvents(dataObj) {
-        dataObj.innerSection.on('click', openMenu);
+        dataObj.innerSection.on('click', menuNext);
         dataObj.innerSection.on('mouseenter', onMouseEnter);
         dataObj.innerSection.on('mouseleave', onMouseLeave);
-    }
-
-    function openMenu(event) {
-        const groupList = getGroupList(this);
-        if(!groupList) return;
-
-        const selected = groupList.filter('.level');
-        selected.addClass('selected');
-        selectedStack.push(selected);
-
-        menuEnter(event.data.data);
-    }
-
-    function closeMenu() {
-        const selected = selectedStack.pop();
-        if(selected) selected.removeClass('selected');
-        menuLeave();
     }
 
     function onMouseEnter() {
@@ -145,118 +237,17 @@ window.onload = (event) => {
         groupList.filter('.border').addClass('idle');
     }
 
-    function getGroupList(element) {
-        const classes = $(element).find('path').attr('class').split(/\s+/);
-
-        for (const x of classes) {
-            if(x.startsWith('level') && x.includes('index')) {
-                return $('.'.concat(x));
-            }
-        }
-
-        return null;
-    }
-
-
-
-
-
-
-
-    class MenuGUI {
-        constructor() {
-            this.level = 0;
-            this.levelStack = [];
-
-            this.mainRadius = 90;
-            this.levelPad = 10;
-            this.levelRadius = 70;
-            this.borderRadius = 5;
-
-            this.initMainArc();
-            this.createLevel(data);
-        }
-
-        getLevelRadius(level) {
-            const innerRadiusLevel = this.mainRadius
-                + (this.levelPad * level)
-                + (this.levelRadius * (level - 1))
-                + (this.borderRadius * (level - 1));
-
-            const outerRadiusLevel = innerRadiusLevel + this.levelRadius;
-            const outerRadiusBorder = outerRadiusLevel + this.borderRadius;
-
-            return  {
-                level: {
-                    innerRadius: innerRadiusLevel,
-                    outerRadius: outerRadiusLevel
-                },
-                border: {
-                    innerRadius: outerRadiusLevel,
-                    outerRadius: outerRadiusBorder
-                }
-            }
-        }
-
-        initMainArc() {
-            createMainArc("main", 0, 90, "rgba(0, 0, 0, 0.7)", [1]);
-        }
-
-        createLevel(data) {
-            while (this.level !== 0 && this.level >= data[0].level) {
-                this.removeLevel();
-            }
-
-            this.level++;
-
-            const levelRadius = this.getLevelRadius(this.level).level;
-            const borderRadius =  this.getLevelRadius(this.level).border;
-
-            const lvlId = "level" + ("0" + this.level).slice(-2);
-            const levelId = createLevelArc(lvlId, levelRadius.innerRadius, levelRadius.outerRadius, 0.05, "rgba(0, 0, 0, 0.5)", data);
-            const borderId = createLevelBorderArc(lvlId + "Border", borderRadius.innerRadius, borderRadius.outerRadius, 0.05,  "rgba(0, 0, 0, 0.8)", data);
-
-            this.levelStack.push([levelId, borderId]);
-
-            if(this.border) this.removeElementById(this.border);
-            this.createSide(borderRadius.outerRadius, data);
-        }
-
-        createSide(innerRadius, data) {
-            this.border = createSideArc("side", innerRadius, translateWidth, 0.05,  "rgba(0, 0, 0, 0.0)", data);
-        }
-
-        removeElementById(elementId) {
-            const element = document.getElementById(elementId);
-            element.parentNode.removeChild(element);
-        }
-
-        removeLevel() {
-            if (this.level <= 1) return;
-            this.level--;
-
-            this.levelStack.pop().forEach(x => this.removeElementById(x));
-
-            if(this.border) this.removeElementById(this.border);
-            this.createSide(this.getLevelRadius(this.level).border.outerRadius, data);
-        }
-    }
+    // #Menu
+    // ######################################
 
     const menu = new MenuGUI();
 
-    function menuEnter(dataName) {
-        menu.createLevel(getDataByVariable(dataName));
+    function menuNext(event) {
+        const aData = getDataByVariable(event.data.data);
+        menu.createLevel(aData, this);
     }
 
-    function menuLeave() {
+    function menuBack() {
         menu.removeLevel();
-    }
-
-    function getDataByVariable(data) {
-        switch (data) {
-            case "refuel": return refuelData;
-            case "speedometer": return speedometerData;
-            case "dance": return danceData;
-        }
     }
 };
