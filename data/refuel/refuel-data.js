@@ -4,7 +4,8 @@ const refuelData = [
         id: "refuel50",
         level: "02",
         index: "00",
-        svg: "./svg/text/50.svg",
+        svg: "./svg/refuel/50.svg",
+        data: "refuelData",
         scale: "1.5"
     },
     {
@@ -12,7 +13,8 @@ const refuelData = [
         id: "refuel100",
         level: "02",
         index: "01",
-        svg: "./svg/text/100.svg",
+        svg: "./svg/refuel/100.svg",
+        data: "refuelData",
         scale: "1.5"
     }
 ];
