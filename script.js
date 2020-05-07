@@ -1,8 +1,11 @@
+//https://bl.ocks.org/mbostock/4341417 // Transitions
 window.onload = (event) => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     const translateWidth = Math.ceil(width / 2);
     const translateHeight = Math.ceil((height / 2) - 50);
+
+    const selectedStack = [];
 
     const svg = d3.select("#container").append("svg")
         .attr("width", width)
@@ -41,15 +44,9 @@ window.onload = (event) => {
                 return [rot, scale, translate].join(' ');
             })
             .attr("class", function(d) { return `level-${d.data.level}-index-${d.data.index}` })
-            .attr("data-data", function(d) { return d.data.data })
-            .on('click', function(ev) {
-                console.log(ev.data.data);
-                menuEnter(ev.data.data);
-            });
+            .attr("data-data", function(d) { return d.data.data });
 
-        dataObj.innerSection.on('click', openMenu);
-        dataObj.innerSection.on('mouseenter', onMouseEnter);
-        dataObj.innerSection.on('mouseleave', onMouseLeave);
+        addEvents(dataObj);
 
         return dataObj.id;
     }
@@ -58,10 +55,7 @@ window.onload = (event) => {
     function createLevelBorderArc(id, innerRadius, outerRadius, padAngle, rgba, data) {
         const classes = "border";
         const dataObj = createArc(id, innerRadius, outerRadius, padAngle, rgba, data, classes);
-
-        dataObj.innerSection.on('click', openMenu);
-        dataObj.innerSection.on('mouseenter', onMouseEnter);
-        dataObj.innerSection.on('mouseleave', onMouseLeave);
+        addEvents(dataObj);
 
         return dataObj.id;
     }
@@ -69,10 +63,7 @@ window.onload = (event) => {
     // Function form side arc
     function createSideArc(id, innerRadius, outerRadius, padAngle, rgba, data) {
         const dataObj = createArc(id, innerRadius, outerRadius, padAngle, rgba, data);
-
-        dataObj.innerSection.on('click', openMenu);
-        dataObj.innerSection.on('mouseenter', onMouseEnter);
-        dataObj.innerSection.on('mouseleave', onMouseLeave);
+        addEvents(dataObj);
 
         return dataObj.id;
     }
@@ -107,41 +98,57 @@ window.onload = (event) => {
         return { id, pie, rotate, arc, innerSection };
     }
 
+    function addEvents(dataObj) {
+        dataObj.innerSection.on('click', openMenu);
+        dataObj.innerSection.on('mouseenter', onMouseEnter);
+        dataObj.innerSection.on('mouseleave', onMouseLeave);
+    }
 
     function openMenu(event) {
+        const groupList = getGroupList(this);
+        if(!groupList) return;
+
+        const selected = groupList.filter('.level');
+        selected.addClass('selected');
+        selectedStack.push(selected);
+
         menuEnter(event.data.data);
     }
 
     function closeMenu() {
+        const selected = selectedStack.pop();
+        if(selected) selected.removeClass('selected');
         menuLeave();
     }
 
     function onMouseEnter() {
         // Apply styles for the class
-        const classes = $(this).find('path').attr('class').split(/\s+/);
-        const groupList = getGroupList(classes);
+        const groupList = getGroupList(this);
         if(!groupList) return;
 
         groupList.filter('.level').removeClass('idle');
         groupList.filter('.border').removeClass('idle');
+
         groupList.filter('.level').addClass('active');
         groupList.filter('.border').addClass('active');
     }
 
     function onMouseLeave() {
         // Apply styles for the class
-        const classes = $(this).find('path').attr('class').split(/\s+/);
-        const groupList = getGroupList(classes);
+        const groupList = getGroupList(this);
         if(!groupList) return;
 
         groupList.filter('.level').removeClass('active');
         groupList.filter('.border').removeClass('active');
+
         groupList.filter('.level').addClass('idle');
         groupList.filter('.border').addClass('idle');
     }
 
-    function getGroupList(arr) {
-        for (const x of arr) {
+    function getGroupList(element) {
+        const classes = $(element).find('path').attr('class').split(/\s+/);
+
+        for (const x of classes) {
             if(x.startsWith('level') && x.includes('index')) {
                 return $('.'.concat(x));
             }
@@ -154,36 +161,39 @@ window.onload = (event) => {
 
 
 
+
+
     class MenuGUI {
         constructor() {
             this.level = 0;
             this.levelStack = [];
-            this.initLevelRadius();
+
+            this.mainRadius = 90;
+            this.levelPad = 10;
+            this.levelRadius = 70;
+            this.borderRadius = 5;
+
             this.initMainArc();
             this.createLevel(data);
         }
 
-        initLevelRadius() {
-            this.radius = {
-                1: {
-                    level: {
-                        innerRadius: 100,
-                        outerRadius: 170
-                    },
-                    border: {
-                        innerRadius: 170,
-                        outerRadius: 175
-                    }
+        getLevelRadius(level) {
+            const innerRadiusLevel = this.mainRadius
+                + (this.levelPad * level)
+                + (this.levelRadius * (level - 1))
+                + (this.borderRadius * (level - 1));
+
+            const outerRadiusLevel = innerRadiusLevel + this.levelRadius;
+            const outerRadiusBorder = outerRadiusLevel + this.borderRadius;
+
+            return  {
+                level: {
+                    innerRadius: innerRadiusLevel,
+                    outerRadius: outerRadiusLevel
                 },
-                2: {
-                    level: {
-                        innerRadius: 185,
-                        outerRadius: 255
-                    },
-                    border: {
-                        innerRadius: 255,
-                        outerRadius: 260
-                    }
+                border: {
+                    innerRadius: outerRadiusLevel,
+                    outerRadius: outerRadiusBorder
                 }
             }
         }
@@ -193,18 +203,26 @@ window.onload = (event) => {
         }
 
         createLevel(data) {
+            while (this.level !== 0 && this.level >= data[0].level) {
+                this.removeLevel();
+            }
+
             this.level++;
+
+            const levelRadius = this.getLevelRadius(this.level).level;
+            const borderRadius =  this.getLevelRadius(this.level).border;
+
             const lvlId = "level" + ("0" + this.level).slice(-2);
-            const levelRadius = this.radius[this.level].level, borderRadius =  this.radius[this.level].border;
             const levelId = createLevelArc(lvlId, levelRadius.innerRadius, levelRadius.outerRadius, 0.05, "rgba(0, 0, 0, 0.5)", data);
             const borderId = createLevelBorderArc(lvlId + "Border", borderRadius.innerRadius, borderRadius.outerRadius, 0.05,  "rgba(0, 0, 0, 0.8)", data);
+
             this.levelStack.push([levelId, borderId]);
 
             if(this.border) this.removeElementById(this.border);
-            this.createBorder(borderRadius.outerRadius, data);
+            this.createSide(borderRadius.outerRadius, data);
         }
 
-        createBorder(innerRadius, data) {
+        createSide(innerRadius, data) {
             this.border = createSideArc("side", innerRadius, translateWidth, 0.05,  "rgba(0, 0, 0, 0.0)", data);
         }
 
@@ -220,7 +238,7 @@ window.onload = (event) => {
             this.levelStack.pop().forEach(x => this.removeElementById(x));
 
             if(this.border) this.removeElementById(this.border);
-            this.createBorder(this.radius[this.level].outerRadius, data);
+            this.createSide(this.getLevelRadius(this.level).border.outerRadius, data);
         }
     }
 
@@ -238,6 +256,7 @@ window.onload = (event) => {
         switch (data) {
             case "refuel": return refuelData;
             case "speedometer": return speedometerData;
+            case "dance": return danceData;
         }
     }
 };
