@@ -1,7 +1,6 @@
 const data = [
     {
         name: "Refuel",
-        id: "refuel",
         level: "01",
         index: "00",
         svg: "./svg/refuel.svg",
@@ -9,7 +8,6 @@ const data = [
     },
     {
         name: "Speedometer",
-        id: "speedometer",
         level: "01",
         index: "01",
         svg: "./svg/speedometer.svg",
@@ -17,7 +15,6 @@ const data = [
     },
     {
         name: "Dance",
-        id: "dance",
         level: "01",
         index: "02",
         svg: "./svg/dance.svg",

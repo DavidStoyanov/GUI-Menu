@@ -90,6 +90,12 @@ window.onload = (event) => {
             if(this.border) this.removeElementById(this.border);
             this.createSide(this.getLevelRadius(this.level).border.outerRadius, data);
         }
+
+        removeAllLevels() {
+            while (this.level > 1) {
+                this.removeLevel();
+            }
+        }
     }
 
     const svg = d3.select("#container").append("svg")
@@ -177,7 +183,8 @@ window.onload = (event) => {
             .attr("fill", rgba)
             .attr("transform", `rotate(${rotate})`)
             .attr("class", function(d) { return `level-${d.data.level}-index-${d.data.index}${classes}` })
-            .attr("data-data", function(d) { return d.data.data });
+            .attr("data-data", function(d) { return d.data.data })
+            .attr("data-id", function(d) { return d.data.id });
 
         return { id, pie, rotate, arc, innerSection };
     }
@@ -243,6 +250,14 @@ window.onload = (event) => {
     const menu = new MenuGUI();
 
     function menuNext(event) {
+        const pressed = this.getElementsByTagName('path')[0];
+        if (pressed && pressed.dataset.id !== undefined && this.dataset.id !== null) {
+            const pressedId = pressed.dataset.id;
+            console.log(pressedId);
+            menu.removeAllLevels();
+            return;
+        }
+
         const aData = getDataByVariable(event.data.data);
         menu.createLevel(aData, this);
     }
