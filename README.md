@@ -17,3 +17,12 @@ Icons made by:
 - Icons made by <a href="https://www.flaticon.com/authors/photo3idea-studio" title="photo3idea_studio">photo3idea_studio</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
 
 - Icons made by <a href="http://www.freepik.com/" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
+
+
+<br />
+
+### Preview
+
+<p align="left">
+  <img src="./img/preview.jpg" width="480" alt="preview image">
+</p>
